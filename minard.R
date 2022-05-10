@@ -171,3 +171,84 @@ ggsave(filename = "minard_names_adjusted.png",
        units = c("px"))
 
 plot_troops_cities <- last_plot() #salvando o grafico com nomes pra uso em codigo
+
+#Temperature
+#Aqui vamos analisar a temperatura em cada longitude 
+#que as tropas passaram.
+
+temp <- ggplot(Minard.temp, aes(long, temp)) +
+  geom_path(color="grey", size=1.5) +
+  geom_point(size=2) 
+
+print(temp)
+ggsave(filename = "minard_temp1.png",
+       width = 2000,
+       height = 800,
+       units = c("px"))
+
+#colocando labels
+Minard.temp <- Minard.temp %>%
+  mutate(label = paste0(temp, "° ", date))
+head(Minard.temp$label)
+
+temp <- ggplot(Minard.temp, aes(long, temp)) +
+  geom_path(color="grey", size=1.5) +
+  geom_point(size=1) +
+  geom_text(aes(label=label), size=2, vjust=-1)
+print(temp)
+ggsave(filename = "minard_temp2.png",
+       width = 2000,
+       height = 800,
+       units = c("px"))
+
+#ajustando labels
+temp <- ggplot(Minard.temp, aes(long, temp)) +
+  geom_path(color="grey", size=1.5) +
+  geom_point(size=1) +
+  geom_text_repel(aes(label=label), size=2.5)
+print(temp)
+ggsave(filename = "minard_temp2_adjusted.png",
+       width = 2000,
+       height = 800,
+       units = c("px"))
+
+plot_temp <- last_plot() #grafico de temp para uso em codigo
+
+#Para finalizar, vamos juntar os dois graficos feitos
+junto <- arrangeGrob(plot_troops_cities, plot_temp)
+print(junto)
+ggsave(filename = "minard_temp_troops.png", junto,
+       width = 2000,
+       height = 1600,
+       units = c("px"))
+
+#Vamos limpar um pouco o grafico de tropas e de temperatura
+plot_troops_cities +
+  coord_cartesian(xlim = c(24, 38)) +
+  labs(x = NULL, y = NULL) +
+  guides(color = FALSE, size = FALSE) +
+  theme_void()
+
+plot_troops_cities_fixed <- last_plot()  
+
+plot_temp + 
+  coord_cartesian(xlim = c(24, 38)) +
+  labs(x = NULL, y="Temperature") + 
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text.x = element_blank(), axis.ticks = element_blank(),
+        panel.border = element_blank())
+
+plot_temp_fixed <- last_plot()
+
+grid.arrange(plot_troops_cities_fixed, plot_temp_fixed, nrow=2, heights=c(3.5, 1.2))
+grid.rect(width = .99, height = .99, gp = gpar(lwd = 2, col = "gray", fill = NA))
+
+junto <- arrangeGrob(plot_troops_cities_fixed, plot_temp_fixed)
+print(junto)
+ggsave(filename = "minard_temp_troops_fixed.png", junto,
+       width = 2000,
+       height = 1600,
+       units = c("px"))
