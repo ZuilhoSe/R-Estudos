@@ -6,6 +6,10 @@ library(gridExtra)     # combining plots
 library(dplyr)         # tidy data manipulations
 library(HistData)
 library(ggrepel)
+library(lubridate)
+library(ggmap)
+library(pander)
+
 
 data(Minard.troops, package="HistData")
 str(Minard.troops)
@@ -163,7 +167,7 @@ ggsave(filename = "minard_names.png",
 #É preciso ajustar a superposição
 graf <- plot_troops +   
   geom_point(data = Minard.cities) +
-  geom_text_repel(data = Minard.cities, aes(label = city))
+  geom_text_repel(data = Minard.cities, aes(label = city), color = "#DC5B44", family = "Open Sans Condensed Bold")
 print(graf)
 ggsave(filename = "minard_names_adjusted.png",
        width = 2000,
@@ -252,3 +256,46 @@ ggsave(filename = "minard_temp_troops_fixed.png", junto,
        width = 2000,
        height = 1600,
        units = c("px"))
+
+#Modificações para atender ao trabalho.
+
+#Para fazer isso vamos ler um novo banco de dados
+troops <- read.table("minard/troops.txt",
+                     header = TRUE, stringsAsFactors = FALSE)
+cities <- read.table("minard/cities.txt",
+                     header = TRUE, stringsAsFactors = FALSE)
+
+troops %>% head() %>% pandoc.table()
+
+#Mapa da Europa
+march.1812.europe <- c(left = -13.10, bottom = 35.75, right = 41.04, top = 61.86)
+march.1812.europe.map <- get_stamenmap(bbox = march.1812.europe, zoom = 5,
+                                       maptype = "terrain", where = "cache")
+ggmap(march.1812.europe.map)
+
+
+#Mapa mais cartonesco
+march.1812.europe.map.wc <- get_stamenmap(bbox = march.1812.europe, zoom = 5,
+                                          maptype = "watercolor", where = "cache")
+ggmap(march.1812.europe.map.wc)
+
+#Sobreposição do mapa com o gráfico de minard
+march.1812.ne.europe <- c(left = 23.5, bottom = 53.4, right = 38.1, top = 56.3)
+
+march.1812.ne.europe.map <- get_stamenmap(bbox = march.1812.ne.europe, zoom = 8,
+                                          maptype = "terrain-background", where = "cache")
+
+march.1812.plot <- ggmap(march.1812.ne.europe.map) +
+  geom_path(data = troops, aes(x = long, y = lat, group = group,
+                               color = direction, size = survivors),
+            lineend = "round") +
+  geom_point(data = cities, aes(x = long, y = lat),
+             color = "#DC5B44") +
+  geom_text_repel(data = cities, aes(x = long, y = lat, label = city),
+                  color = "#DC5B44", family = "Open Sans Condensed Bold") +
+  scale_size(range = c(0.5, 10)) +
+  scale_colour_manual(values = c("#DFC17E", "#252523")) +
+  guides(color = FALSE, size = FALSE) +
+  theme_nothing()
+
+march.1812.plot
